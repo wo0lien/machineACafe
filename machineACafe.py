@@ -87,7 +87,7 @@ async def on_message(message):
             courreur = courreurs[random.randint(0, len(courreurs) - 1)]
             currentCourse = courreur["course"]
             courreur["avance"] += random.randint(1, 10)
-            if (courreur["avance"] >= 20):
+            if (courreur["avance"] >= 200):
                 await message.channel.send("---------------------- Fin de la course ----------------------")
                 strCourseFin = ":checkered_flag:" + 200 * " " + ":triangular_flag_on_post:" + courreur["reaction"].emoji
                 await currentCourse.edit(content=strCourseFin)
@@ -124,6 +124,7 @@ async def on_message(message):
             # clear  variables
             messages = {}
             courreurs = []
+            parieurs = []
 
 
     elif(message.content == "$scoreboard" and state == 0 and not message.author.bot):
