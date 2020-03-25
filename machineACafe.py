@@ -89,10 +89,10 @@ async def on_message(message):
             courreur["avance"] += random.randint(1, 10)
             if (courreur["avance"] >= 200):
                 await message.channel.send("---------------------- Fin de la course ----------------------")
-                strCourseFin = ":checkered_flag:" + 200 * " " + ":triangular_flag_on_post:" + courreur["reaction"].emoji
+                strCourseFin = ":triangular_flag_on_post:" + 200 * " " + ":checkered_flag:" + courreur["reaction"].emoji
                 await currentCourse.edit(content=strCourseFin)
                 break
-            strCourse = ":checkered_flag:" + courreur["avance"] * " " + courreur["reaction"].emoji + (200 - courreur["avance"]) * " " + ":triangular_flag_on_post:"
+            strCourse = ":triangular_flag_on_post:" + courreur["avance"] * " " + courreur["reaction"].emoji + (200 - courreur["avance"]) * " " + ":checkered_flag:"
             await currentCourse.edit(content=strCourse)
             sleep(random.random() * 0.3 + 0.1)
 
