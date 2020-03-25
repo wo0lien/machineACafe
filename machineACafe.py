@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from time import sleep
 import sqlite3
 
+RACE_LENGTH = 150
+
 # connecting to the sqlite3 database to store players score
 conn = sqlite3.connect("users.db")
 c = conn.cursor()
@@ -30,7 +32,7 @@ async def on_message(message):
     
     ########################## PARTIE CAFE ###################################
 
-    if (re.match("(.)*(cafe|café|kfé|kfe|kaf|caf)(.)*", message.content) and not message.author.bot):
+    if (re.match("(.)*(cafe|café|kfé|kfe|kaf|caf|kawa)(.)*", message.content) and not message.author.bot):
         # génération aléatoire du message
         rand = random.randint(1, 10)
         if rand == 1:
@@ -87,12 +89,12 @@ async def on_message(message):
             courreur = courreurs[random.randint(0, len(courreurs) - 1)]
             currentCourse = courreur["course"]
             courreur["avance"] += random.randint(1, 10)
-            if (courreur["avance"] >= 200):
+            if (courreur["avance"] >= RACE_LENGTH):
                 await message.channel.send("---------------------- Fin de la course ----------------------")
-                strCourseFin = ":triangular_flag_on_post:" + 200 * " " + ":checkered_flag:" + courreur["reaction"].emoji
+                strCourseFin = ":triangular_flag_on_post:" + RACE_LENGTH * " " + ":checkered_flag:" + courreur["reaction"].emoji
                 await currentCourse.edit(content=strCourseFin)
                 break
-            strCourse = ":triangular_flag_on_post:" + courreur["avance"] * " " + courreur["reaction"].emoji + (200 - courreur["avance"]) * " " + ":checkered_flag:"
+            strCourse = ":triangular_flag_on_post:" + courreur["avance"] * " " + courreur["reaction"].emoji + (RACE_LENGTH - courreur["avance"]) * " " + ":checkered_flag:"
             await currentCourse.edit(content=strCourse)
             sleep(random.random() * 0.3 + 0.1)
 
