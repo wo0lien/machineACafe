@@ -81,7 +81,7 @@ async def on_message(message):
         # affichage de la course
         await message.channel.send("---------------------- Debut de la course ----------------------")
         for courreur in courreurs:            
-            courreur["course"] = await message.channel.send(':checkered_flag:' + courreur["avance"] * " " + courreur["reaction"].emoji + (200 - courreur["avance"]) * " " + ":triangular_flag_on_post:")
+            courreur["course"] = await message.channel.send(':triangular_flag_on_post:' + courreur["avance"] * " " + courreur["reaction"].emoji + (200 - courreur["avance"]) * " " + ":checkered_flag:")
             
         # on fait la course !!!
         while True:
