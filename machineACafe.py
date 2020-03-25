@@ -1,4 +1,4 @@
-# bot.py
+#! \usr\bin\python3
 import os
 import re
 import random
@@ -13,8 +13,11 @@ RACE_LENGTH = 150
 # connecting to the sqlite3 database to store players score
 conn = sqlite3.connect("users.db")
 c = conn.cursor()
+# init db
+c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER, name TEXT, balance TEXT, nbBets INTEGER DEFAULT 0, nbCafe INTEGER DEFAULT 0, PRIMARY KEY(id));')
 
 load_dotenv()
+
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 client = discord.Client()
@@ -34,13 +37,25 @@ async def on_message(message):
 
     if (re.match("(.)*(cafe|café|kfé|kfe|kaf|caf|kawa)(.)*", message.content) and not message.author.bot):
         # génération aléatoire du message
-        rand = random.randint(1, 10)
-        if rand == 1:
-            await message.channel.send("Plus de gobelets déso pas déso")
-        elif rand == 2:
-            await message.channel.send("Tiens, Je rend pas la monaie par contre...")
+
+        c.execute(f'SELECT u.* FROM users u WHERE u.id={message.author.id}')
+        addict = c.fetchone()
+        if (addict and int(addict[2]) >= 50):
+            c.execute(f'UPDATE users SET balance = balance - 45, nbCafe = nbCafe + 1 WHERE id LIKE {message.author.id};')
+            rand = random.randint(1, 10)
+            if rand == 1:
+                await message.channel.send("Plus de gobelets déso pas déso, -45 tc-dollars") # deja -45 tc-dollars
+            elif rand == 2:
+                await message.channel.send("Tiens, Je rend pas la monaie par contre... -50 tc-dollars")
+                c.execute(f'UPDATE users SET balance = balance - 5 WHERE id LIKE {message.author.id};') # et hop -5 tc-dollars en plus
+            else:
+                await message.channel.send("Bzz voila ton café :) -45 tc-dollars")
+        elif(addict):
+            await message.channel.send("Tu n'as pas assez d'argent... il te faut 50 tc-dollars pour prendre un café")
         else:
-            await message.channel.send("Bzz voila ton café :)")
+            await message.channel.send("Tu n'as pas parié, il te faut 50 tc-dollars pour prendre un café")
+        
+        conn.commit()
     
     ########################## PARTIE COURSES ###################################
     
@@ -81,7 +96,7 @@ async def on_message(message):
         # affichage de la course
         await message.channel.send("---------------------- Debut de la course ----------------------")
         for courreur in courreurs:            
-            courreur["course"] = await message.channel.send(':triangular_flag_on_post:' + courreur["avance"] * " " + courreur["reaction"].emoji + (200 - courreur["avance"]) * " " + ":checkered_flag:")
+            courreur["course"] = await message.channel.send(':triangular_flag_on_post:' + courreur["avance"] * " " + courreur["reaction"].emoji + (RACE_LENGTH - courreur["avance"]) * " " + ":checkered_flag:")
             
         # on fait la course !!!
         while True:
@@ -104,21 +119,21 @@ async def on_message(message):
         try:
             await message.channel.send(":first_place: " + podium[0]["reaction"].emoji)
             for parieur in podium[0]["votes"]:
-                c.execute(f'INSERT OR IGNORE INTO users VALUES ({parieur.id}, "{parieur.name}", 0, 0);')
-                c.execute(f'UPDATE users SET balance = balance +  5, nbBets = nbBets + 1 WHERE id LIKE {parieur.id};')
-                await message.channel.send(f'{parieur.name} a gagné 5 tc-dollars')
+                c.execute(f'INSERT OR IGNORE INTO users VALUES ({parieur.id}, "{parieur.name}", 0, 0, 0);')
+                c.execute(f'UPDATE users SET balance = balance +  50, nbBets = nbBets + 1 WHERE id LIKE {parieur.id};')
+                await message.channel.send(f'{parieur.name} a gagné 50 tc-dollars')
 
             await message.channel.send(":second_place: " + podium[1]["reaction"].emoji)
             for parieur in podium[1]["votes"]:
-                c.execute(f'INSERT OR IGNORE INTO users VALUES ({parieur.id}, "{parieur.name}", 0, 0);')
-                c.execute(f'UPDATE users SET balance = balance +  3, nbBets = nbBets + 1 WHERE id LIKE {parieur.id};')
-                await message.channel.send(f'{parieur.name} a gagné 3 tc-dollars')
+                c.execute(f'INSERT OR IGNORE INTO users VALUES ({parieur.id}, "{parieur.name}", 0, 0, 0);')
+                c.execute(f'UPDATE users SET balance = balance +  40, nbBets = nbBets + 1 WHERE id LIKE {parieur.id};')
+                await message.channel.send(f'{parieur.name} a gagné 40 tc-dollars')
 
             await message.channel.send(":third_place: " + podium[2]["reaction"].emoji)
             for parieur in podium[2]["votes"]:
-                c.execute(f'INSERT OR IGNORE INTO users VALUES ({parieur.id}, "{parieur.name}", 0, 0);')
-                c.execute(f'UPDATE users SET balance = balance +  1, nbBets = nbBets + 1 WHERE id LIKE {parieur.id};')
-                await message.channel.send(f'{parieur.name} a gagné 1 tc-dollar')
+                c.execute(f'INSERT OR IGNORE INTO users VALUES ({parieur.id}, "{parieur.name}", 0, 0, 0);')
+                c.execute(f'UPDATE users SET balance = balance +  30, nbBets = nbBets + 1 WHERE id LIKE {parieur.id};')
+                await message.channel.send(f'{parieur.name} a gagné 30 tc-dollar')
         
         finally:
             conn.commit() # udpate the changes in db
@@ -129,18 +144,18 @@ async def on_message(message):
             parieurs = []
 
 
-    elif(message.content == "$scoreboard" and state == 0 and not message.author.bot):
-        await message.channel.send(":first_place: ---- Scoreboard ---- :first_place:")
-        for index, row in enumerate(c.execute('SELECT u.* FROM users u ORDER BY u.balance DESC LIMIT 10')):
+    elif(message.content == "$richiestboard" and state == 0 and not message.author.bot):
+        await message.channel.send(":first_place: ---- Richiestboard ---- :first_place:")
+        for index, row in enumerate(c.execute('SELECT * FROM users ORDER BY balance DESC LIMIT 10')):
             await message.channel.send(f'{index + 1} --- {row[1]} avec {row[2]} tc-dollars')
 
     elif(message.content == "$myscore" and state == 0 and not message.author.bot):
         c.execute(f'SELECT * FROM users WHERE id={message.author.id}')
         dbOut = c.fetchone()
-        await message.channel.send(f'Tu as gagné {dbOut[2]} tc-dollars en {dbOut[3]} paris')
+        await message.channel.send(f'Il te reste {dbOut[2]} tc-dollars. Tu as fait {dbOut[3]} paris et tu as bu {dbOut[4]} cafés.')
 
     elif(message.content == "$help" and state == 0 and not message.author.bot):
-        await message.channel.send("Liste des commandes : $course, $scoreboard, $myscore")
+        await message.channel.send("Liste des commandes : $course, $richiestboard, $myscore")
 
 @client.event
 async def on_reaction_add(reaction, user):
