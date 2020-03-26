@@ -14,7 +14,7 @@ RACE_LENGTH = 150
 conn = sqlite3.connect("users.db")
 c = conn.cursor()
 # init db
-c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER, name TEXT, balance TEXT, nbBets INTEGER DEFAULT 0, nbCafe INTEGER DEFAULT 0, PRIMARY KEY(id));')
+c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER, name TEXT, balance INTEGER, nbBets INTEGER DEFAULT 0, nbCafe INTEGER DEFAULT 0, PRIMARY KEY(id));')
 
 load_dotenv()
 
